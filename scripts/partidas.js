@@ -2,9 +2,9 @@
 
 /* amostra de partidas com campo referee (árbitro) */
 const sampleMatches = [
-  // { id:1, round:1, date:"2026-01-12T16:00:00", home:"Palmeiras", away:"Flamengo",
-  //   homeLogo:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Palmeiras_logo.svg/500px-Palmeiras_logo.svg.png",
-  //   awayLogo:"", homeScore:null, awayScore:null, status:"upcoming", venue:"Allianz Parque", referee: "Clécio Pereira" },
+  { id:1, round:"1", date:"2026-01-12T16:00:00", home:"Palmeiras", away:"Flamengo",
+    homeLogo:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Palmeiras_logo.svg/500px-Palmeiras_logo.svg.png",
+    awayLogo:"", homeScore:2, awayScore:1, status:"finished", venue:"Allianz Parque", referee: "Clécio Pereira" },
 
   // { id:2, round:1, date:"2026-01-12T18:30:00", home:"Corinthians", away:"São Paulo",
   //   homeLogo:"https://upload.wikimedia.org/wikipedia/pt/b/b4/Corinthians_simbolo.png",
@@ -111,7 +111,7 @@ function renderCard(m){
       <div class="match-meta">
         ${statusBadge}
         <div style="font-size:13px">${dateStr}</div>
-        <div style="font-size:13px;color:var(--muted)">Rodada ${m.round}</div>
+        <div style="font-size:13px;color:var(--muted)">Rodada ${m.round}ª</div>
         <div style="font-size:12px;color:var(--muted);margin-top:6px"><strong>Árbitro:</strong> ${m.referee || '—'}</div>
       </div>
     </div>
