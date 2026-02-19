@@ -1,20 +1,20 @@
 {
   "name": "Rural App",
   "short_name": "Rural",
-  "start_url": "index.html",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "/imgs/LOGORURAL.png",
       "sizes": "192x192",
-      "type": "imgs/LOGORURAL.png"
+      "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "/imgs/LOGORURAL.png",
       "sizes": "512x512",
-      "type": "imgs/LOGORURAL.png"
+      "type": "image/png"
     }
   ]
 }
