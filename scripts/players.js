@@ -1,7 +1,19 @@
-// scripts/players_noexport.js (versão que consome players_data.json gerado a partir da planilha)
-// This script intentionally DOES NOT include "Atualizar" or "Exportar CSV" functionality.
+// scripts/players_noexport.js
+// suporta fontes separadas por temporada (JSON + link da planilha)
 
-const DATA_URL = 'players_data.json'; // coloque o players_data.json no mesmo diretório da página
+const DEFAULT_DATA_URL = 'players_data.json'; // fallback se temporada não tiver fonte
+// mapeie aqui as temporadas para seus JSONs e (opcional) URLs das planilhas
+const SEASON_SOURCES = {
+  "2026": {
+    json: "players_2026.json", // coloque esse arquivo no mesmo diretório
+    sheet: "https://docs.google.com/spreadsheets/d/ID_DA_PLANILHA_2026/htmlview"
+  },
+  "2025": {
+    json: "players_data.json",
+    sheet: "https://docs.google.com/spreadsheets/d/1AGNqeY21fvCs26rZq-J6jjYVwcB_skh5v8XHeKoBsLY/htmlview?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAb21jcAPvodtleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA81NjcwNjczNDMzNTI0MjcAAafBDxnX-LFuZr0Z_PzBqSj_g6ot9kMpn3wPgJQGJuGODqSI-OSbSNzqwv3z4Q_aem_NSfG8ny_YpzE15RqKsa73g"
+  }
+  // adicione mais temporadas aqui
+};
 
 const $ = s => document.querySelector(s);
 const playersGrid = $("#playersGrid");
@@ -10,12 +22,25 @@ const searchInput = $("#searchInput");
 const teamFilter = $("#teamFilter");
 const posFilter = $("#posFilter");
 const openSheet = $("#open-sheet");
+const seasonSelect = $("#season");
 
-openSheet.href = '#'; // ajuste manualmente se quiser link da planilha
-
-let raw = []; // raw rows from JSON
+let raw = []; // raw rows from JSON (todas as linhas da temporada atual)
 let teamsMap = {}; // { teamName: [playerObj, ...] }
 let allPlayers = []; // flattened list
+let cachedSeasonRows = {}; // cache: season -> rows
+
+/* -----------------------
+   Helpers para temporada
+   ----------------------- */
+
+function getSourceForSeason(season){
+  if(!season) return null;
+  return SEASON_SOURCES[season] || null;
+}
+
+/* -----------------------
+   (SEU PARSER / LÓGICA EXISTENTE)
+   ----------------------- */
 
 function isHeaderRow(row){
   const v = (row['Unnamed: 1'] || '').toString().trim().toUpperCase();
@@ -97,9 +122,13 @@ function parseRows(rows){
   }
 }
 
+/* -----------------------
+   UI builders (seu código)
+   ----------------------- */
+
 function buildTeamList(){
   const teams = Object.keys(teamsMap).sort((a,b)=> a.localeCompare(b,'pt'));
-  teamFilter.innerHTML = `<option value="all">Todos os times</option>` + teams.map(t => `<option value="${t}">${t} (${teamsMap[t].length})</option>`).join('');
+  teamFilter.innerHTML = `<option value="all">Todos os times</option>` + teams.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)} (${teamsMap[t].length})</option>`).join('');
   renderTeams(teams);
 }
 
@@ -154,6 +183,10 @@ function renderTeams(teams){
 
 function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function escapeAttr(s){ return String(s||'').replace(/"/g,'&quot;'); }
+
+/* -----------------------
+   Filter (seu código)
+   ----------------------- */
 
 function applyFilters(){
   const q = (searchInput.value || '').trim().toLowerCase();
@@ -218,21 +251,84 @@ function applyFilters(){
   });
 }
 
-async function init(){
+/* -----------------------
+   Carregamento por temporada (fetch dinâmico + cache)
+   ----------------------- */
+
+async function loadSeasonRows(season){
+  // se já temos em cache, retorna
+  if(cachedSeasonRows[season]) return cachedSeasonRows[season];
+
+  const src = getSourceForSeason(season);
+  const url = src && src.json ? src.json : DEFAULT_DATA_URL;
   try{
-    const res = await fetch(DATA_URL);
-    if(!res.ok) throw new Error('Falha ao carregar JSON');
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('Falha ao carregar JSON: ' + url);
     const rows = await res.json();
-    raw = rows;
-    parseRows(raw);
-    buildTeamList();
+    cachedSeasonRows[season] = rows;
+    return rows;
   }catch(err){
     console.error(err);
-    playersGrid.innerHTML = `<div style="padding:18px;color:var(--muted)">Erro ao carregar dados. Verifique se <strong>players_data.json</strong> está no mesmo diretório e é acessível.</div>`;
+    // retornar array vazio para evitar quebrar página
+    return [];
   }
 }
 
+async function updateForSeason(season){
+  // atualizar link da planilha (se existir no mapa)
+  const src = getSourceForSeason(season);
+  if(src && src.sheet && openSheet) openSheet.href = src.sheet;
+  else if(openSheet) openSheet.href = '#';
+
+  // carregar rows para a temporada (com cache)
+  const rows = await loadSeasonRows(season);
+  raw = rows.slice(); // set raw para a temporada atual
+  parseRows(raw);
+  buildTeamList();
+  // reset filtros visuais ao trocar temporada (opcional)
+  searchInput.value = '';
+  teamFilter.value = 'all';
+  applyFilters();
+}
+
+/* -----------------------
+   Inicialização
+   ----------------------- */
+
+async function init(){
+  try{
+    // popular seasonSelect com as chaves de SEASON_SOURCES, respeitando a ordem
+    if(seasonSelect){
+      const seasons = Object.keys(SEASON_SOURCES);
+      if(seasons.length){
+        seasonSelect.innerHTML = seasons.map(s => `<option value="${s}">${s}</option>`).join('');
+      }
+    }
+
+    // temporada inicial (select ou primeira do mapa ou 'all')
+    const initialSeason = (seasonSelect && seasonSelect.value) ? seasonSelect.value : (Object.keys(SEASON_SOURCES)[0] || 'all');
+
+    if(seasonSelect){
+      seasonSelect.addEventListener('change', (e) => {
+        updateForSeason(e.target.value);
+      });
+    }
+
+    // carrega primeira temporada
+    await updateForSeason(initialSeason);
+
+  }catch(err){
+    console.error(err);
+    playersGrid.innerHTML = `<div style="padding:18px;color:var(--muted)">Erro ao iniciar o módulo de jogadores.</div>`;
+  }
+}
+
+/* -----------------------
+   Listeners
+   ----------------------- */
+
 searchInput.addEventListener('input', ()=> applyFilters());
 teamFilter.addEventListener('change', ()=> applyFilters());
+if(posFilter) posFilter.addEventListener('change', ()=> applyFilters());
 
 document.addEventListener('DOMContentLoaded', ()=> init());
