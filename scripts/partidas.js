@@ -196,7 +196,7 @@ function openModal(id){
   const modal = $("#matchModal");
   const body = $("#modalBody");
   if(!modal || !body) return;
-
+  
   const scoreHtml = (m.status === "upcoming") ? "vs" : `${m.homeScore} x ${m.awayScore}`;
   body.innerHTML = `
     <div style="display:flex;gap:12px;align-items:center;justify-content:space-between">
@@ -225,7 +225,12 @@ function openModal(id){
     <p><strong>Árbitro:</strong> ${m.referee || '—'}</p>
     <div style="margin-top:12px"><button class="btn" id="closeModalFromAction">Fechar</button></div>
   `;
-  modal.classList.remove("hidden"); modal.setAttribute("aria-hidden","false");
+   modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+
+  // Bloqueia scroll do body e facilita esconder floats
+  document.body.classList.add('modal-open');
+
   $("#closeModalFromAction").onclick = closeModal;
 }
 
@@ -233,8 +238,10 @@ function closeModal(){
   const modal = $("#matchModal");
   if(!modal) return;
   modal.classList.add("hidden"); modal.setAttribute("aria-hidden","true");
-}
 
+  // Reabilita scroll do body
+  document.body.classList.remove('modal-open');
+}
 /* event wiring */
 function attachUI(){
   // tabs
@@ -271,3 +278,4 @@ document.addEventListener("DOMContentLoaded", ()=>{
   attachUI();
   applyFilters();
 });
+
