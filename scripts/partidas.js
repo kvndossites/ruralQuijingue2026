@@ -190,7 +190,7 @@ function applyFilters(){
 }
 
 /* modal detail (mostre árbitro aqui também) */
- */
+ 
 function openModal(id){
   const m = matches.find(x => x.id === id);
   if(!m) return;
@@ -345,6 +345,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   attachUI();
   applyFilters();
 });
+
 
 
 
