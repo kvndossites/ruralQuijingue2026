@@ -347,4 +347,70 @@ span a{
 
 span a:hover{
   color: #0c0844;
+
+}
+
+/* ---------- FIX RESPONSIVO PARA MODAL E BOTÕES FLOUTANTES ---------- */
+
+/* garante espaço seguro em iPhones / notch e padding adequado no overlay */
+.modal{
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10,12,12,0.45);
+  z-index: 1200;
+  padding: env(safe-area-inset-top, 18px) env(safe-area-inset-right, 18px) env(safe-area-inset-bottom, 18px) env(safe-area-inset-left, 18px);
+}
+
+/* conteúdo do modal limitado ao viewport e com rolagem interna */
+.modal-content{
+  background: var(--card);
+  border-radius: 12px;
+  max-width: 92vw;                  /* nunca maior que a largura da tela */
+  width: 100%;
+  max-height: calc(100vh - 64px);   /* deixa margem superior/inferior para arredondados */
+  overflow-y: auto;                 /* permite rolar conteúdo dentro do modal */
+  padding: 18px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* garante botão fechar acessível acima do conteúdo */
+.modal-close{
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 5; /* acima do conteúdo do modal */
+  padding: 8px;
+  border-radius: 8px;
+}
+
+/* Evita que botões/floats internos apareçam por cima do modal *
+   (se existir algum botão flutuante com classe .fav-btn ou .floating-fav) */
+.modal .fav-btn,
+.modal .floating-fav,
+.modal .fab {
+  display: none !important;
+}
+
+/* Quando modal aberto, bloqueia scroll do body (precisa adicionar/remover classe via JS) */
+body.modal-open {
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* Ajustes adicionais para evitar overflow de layout dos cards em telas pequenas */
+@media (max-width: 760px) {
+  .match-row{ flex-direction: column; align-items: flex-start; gap:10px; }
+  .team{ max-width: 100%; min-width: 0; }
+  .teams{ flex-wrap: nowrap; gap:8px; }
+  .match-meta{ width:100%; text-align:left; align-items:flex-start; order:3; }
+  .logo-img{ width:44px; height:44px; }
+  .score{ font-size:18px; min-width:48px; }
 }
