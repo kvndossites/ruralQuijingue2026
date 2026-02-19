@@ -190,48 +190,89 @@ function applyFilters(){
 }
 
 /* modal detail (mostre árbitro aqui também) */
+ */
 function openModal(id){
-  const m = matches.find(x=>x.id===id);
+  const m = matches.find(x => x.id === id);
   if(!m) return;
+
   const modal = $("#matchModal");
   const body = $("#modalBody");
   if(!modal || !body) return;
-  
-  const scoreHtml = (m.status === "upcoming") ? "vs" : `${m.homeScore} x ${m.awayScore}`;
+
+  // Formata placar (vs se for próximo)
+  const scoreHtml = (m.status === "upcoming") ? "vs" : `${m.homeScore ?? "—"} x ${m.awayScore ?? "—"}`;
+
+  // HTML do topo com placar centralizado (substitua só esta parte no innerHTML do modal)
   body.innerHTML = `
-    <div style="display:flex;gap:12px;align-items:center;justify-content:space-between">
-      <div style="display:flex;gap:12px;align-items:center">
+    <div class="modal-scoreboard">
+      <div class="team-box left">
         ${ renderLogoHtml(m.home, m.homeLogo) }
-        <div>
-          <h3 style="margin:0">${m.home}</h3>
-          <div style="color:var(--muted)">${m.venue}</div>
-        </div>
+        <div class="team-name">${m.home}</div>
       </div>
-      <div style="text-align:center">
-        <div style="font-weight:800;font-size:28px">${scoreHtml}</div>
-        <div style="color:var(--muted)">${formatDate(m.date)}</div>
+
+      <div class="score-box">
+        <div class="score-big">${scoreHtml}</div>
+        <div class="score-date">${formatDate ? formatDate(m.date) : (new Date(m.date)).toLocaleString()}</div>
       </div>
-      <div style="display:flex;gap:12px;align-items:center;flex-direction:row-reverse">
+
+      <div class="team-box right">
         ${ renderLogoHtml(m.away, m.awayLogo) }
-        <div style="text-align:right">
-          <h3 style="margin:0">${m.away}</h3>
-        </div>
+        <div class="team-name">${m.away}</div>
       </div>
     </div>
-    <hr style="margin:12px 0"/>
-    <p><strong>Rodada:</strong> ${m.round}</p>
-    <p><strong>Local:</strong> ${m.venue}</p>
-    <p><strong>Status:</strong> ${m.status === "upcoming" ? "Próxima" : "Finalizada"}</p>
-    <p><strong>Árbitro:</strong> ${m.referee || '—'}</p>
-    <div style="margin-top:12px"><button class="btn" id="closeModalFromAction">Fechar</button></div>
-  `;
-   modal.classList.remove("hidden");
-  modal.setAttribute("aria-hidden","false");
 
-  // Bloqueia scroll do body e facilita esconder floats
+    <hr style="margin:12px 0"/>
+
+    <div class="modal-meta">
+      <p><strong>Rodada:</strong> ${m.round ?? '—'}</p>
+      <p><strong>Local:</strong> ${m.venue ?? '—'}</p>
+      <p><strong>Status:</strong> ${m.status === "upcoming" ? "Próxima" : "Finalizada"}</p>
+      <p><strong>Árbitro:</strong> ${m.referee || '—'}</p>
+    </div>
+
+    <div style="margin-top:12px; text-align:left;">
+      <button class="btn" id="closeModalFromAction" type="button">Fechar</button>
+    </div>
+  `;
+
+  // mostra modal de forma acessível
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+  modal.setAttribute("aria-modal", "true");
+
+  // scroll to top do conteúdo do modal (útil se já teve rolagem interna)
+  try { body.scrollTop = 0; } catch(e){ /*ignore*/ }
+
+  // bloqueia o scroll do body (CSS .modal-open deve existir no seu stylespart.css)
   document.body.classList.add('modal-open');
 
-  $("#closeModalFromAction").onclick = closeModal;
+  // Esconde elementos flutuantes que possam sobrepor o modal
+  const floatSelectors = '.fav-btn, .floating-fav, .fab, .float-action';
+  const floats = Array.from(document.querySelectorAll(floatSelectors));
+  // guarda display original para restaurar depois
+  document._modalHiddenEls = floats.map(el => {
+    const current = el.style.display || getComputedStyle(el).display;
+    el.style.display = 'none';
+    return { el, display: current };
+  });
+
+  // handler ESC — guarda referência para remover depois
+  document._modalKeyHandler = function(e){
+    if(e.key === 'Escape' || e.key === 'Esc') closeModal();
+  };
+  document.addEventListener('keydown', document._modalKeyHandler);
+
+  // fecha ao clicar no botão
+  const closeBtn = $("#closeModalFromAction");
+  if(closeBtn) {
+    closeBtn.onclick = closeModal;
+    // foco no botão fechar para acessibilidade
+    closeBtn.focus({ preventScroll: true });
+  }
+
+  // opcional: se o modal tiver overlay clicável para fechar, você pode descomentar:
+  // const overlay = modal.closest('.modal');
+  // if(overlay) overlay.onclick = (ev) => { if(ev.target === overlay) closeModal(); };
 }
 
 function closeModal(){
@@ -278,4 +319,5 @@ document.addEventListener("DOMContentLoaded", ()=>{
   attachUI();
   applyFilters();
 });
+
 
