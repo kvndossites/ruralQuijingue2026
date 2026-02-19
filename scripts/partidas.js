@@ -120,8 +120,7 @@ function renderCard(m){
       <div>
         <button class="btn view-detail" data-id="${m.id}">Ver detalhes</button>
       </div>
-
-      
+    </div>
   </article>`;
 }
 
@@ -345,6 +344,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   attachUI();
   applyFilters();
 });
+
 
 
 
