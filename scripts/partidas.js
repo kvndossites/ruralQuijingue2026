@@ -277,11 +277,37 @@ function openModal(id){
 
 function closeModal(){
   const modal = $("#matchModal");
+  const body = $("#modalBody");
   if(!modal) return;
-  modal.classList.add("hidden"); modal.setAttribute("aria-hidden","true");
 
-  // Reabilita scroll do body
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+  modal.setAttribute("aria-modal", "false");
+
+  // reabilita scroll do body
   document.body.classList.remove('modal-open');
+
+  // restaura elementos flutuantes que foram escondidos
+  if(Array.isArray(document._modalHiddenEls)){
+    document._modalHiddenEls.forEach(item => {
+      try { item.el.style.display = item.display === 'none' ? '' : item.display; } catch(e){ /*ignore*/ }
+    });
+    document._modalHiddenEls = null;
+  }
+
+  // remove handler de teclado ESC
+  if(document._modalKeyHandler){
+    document.removeEventListener('keydown', document._modalKeyHandler);
+    document._modalKeyHandler = null;
+  }
+
+  // remove onclick do botão fechar (limpeza)
+  const closeBtn = $("#closeModalFromAction");
+  if(closeBtn) closeBtn.onclick = null;
+
+  // opcional: devolve foco para um elemento relacionado (ex.: lista do jogo) se quiser
+  // const opener = document.querySelector(`[data-open-id="${m.id}"]`);
+  // if(opener) opener.focus();
 }
 /* event wiring */
 function attachUI(){
@@ -319,5 +345,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   attachUI();
   applyFilters();
 });
+
 
 
