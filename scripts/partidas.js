@@ -4,7 +4,7 @@
 const sampleMatches = [
   { id:1, round:"1", date:"2026-01-12T16:00:00", home:"Palmeiras", away:"Flamengo",
     homeLogo:"https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Palmeiras_logo.svg/500px-Palmeiras_logo.svg.png",
-    awayLogo:"", homeScore:2, awayScore:1, status:"finished", venue:"Allianz Parque", referee: "KEIVINHO" },
+    awayLogo:"", homeScore:2, awayScore:1, status:"finished", venue:"Allianz Parque", referee: "teste" },
 
   // { id:2, round:1, date:"2026-01-12T18:30:00", home:"Corinthians", away:"São Paulo",
   //   homeLogo:"https://upload.wikimedia.org/wikipedia/pt/b/b4/Corinthians_simbolo.png",
@@ -345,6 +345,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   attachUI();
   applyFilters();
 });
+
 
 
 
